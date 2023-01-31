@@ -10,7 +10,8 @@ import (
 	"os"
 	"time"
 
-    _ "github.com/lib/pq"
+	"github.com/NPeykov/greenlight/internal/data"
+	_ "github.com/lib/pq"
 )
 
 const version = "1.0.0"
@@ -29,6 +30,7 @@ type config struct {
 type application struct {
     config config 
     logger *log.Logger
+    models data.Models
 }
 
 
@@ -40,7 +42,7 @@ func main() {
     flag.StringVar(&cfg.db.dsn, "dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
     flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
     flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
-    flag.StringVar(&cfg.db.maxIdleTime, "db-max-open-conns", "15m", "PostgreSQL max connection idle time") 
+    flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time") 
     flag.Parse()
 
     logger := log.New(os.Stdout, "", log.Ldate | log.Ltime)
@@ -55,6 +57,7 @@ func main() {
     app := &application{
         config: cfg,
         logger: logger,
+        models: data.NewModels(db),
     }
 
     srv := &http.Server{
