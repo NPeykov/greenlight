@@ -6,13 +6,53 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/NPeykov/greenlight/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
 
 type envelope map[string]interface{}
+
+func (app *application) readString(qs url.Values, key string, defaultValue string) string {
+    s := qs.Get(key)
+
+    if s == "" {
+        return defaultValue
+    }
+
+    return s
+}
+
+
+func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
+    csv := qs.Get(key)
+
+    if csv == "" {
+        return defaultValue
+    }
+
+    return strings.Split(csv, ",")
+}
+
+func (app *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+    s := qs.Get(key)
+
+    if s == "" {
+        return defaultValue
+    }
+
+    i, err := strconv.Atoi(s)
+
+    if err != nil {
+        v.AddError(key, "must be an integer")
+        return defaultValue
+    }
+
+    return i 
+}
 
 func (app *application) readIDParam(r *http.Request) (int64, error) {
     params := httprouter.ParamsFromContext(r.Context())
@@ -92,3 +132,4 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
     }
     return nil
 }
+
